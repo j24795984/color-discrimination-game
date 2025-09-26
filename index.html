@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色辨遊戲</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: rgb(41, 39, 49);
+            height: 100vh;
+            margin: 0;
+            color: #FFF;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        section {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .homepage,
+        .end-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        section hr {
+            width: 300px;
+            margin-bottom: 32px;
+        }
+
+        button {
+            width: 100px;
+            height: 48px;
+            background-color: orange;
+            border: 2px solid #ffffff50;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .end-page button {
+            width: 150px;
+        }
+
+        button .mask {
+            background-color: rgb(41, 39, 49);
+            width: 200px;
+            height: 200px;
+            border-radius: 40%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -80%);
+        }
+
+        button:hover {
+            cursor: pointer;
+        }
+
+        button:hover .mask {
+            top: -95%;
+            transform: translate(-50%, -80%) rotate(180deg);
+            transition: 1s;
+        }
+
+        button:hover span {
+            color: black;
+            transition: 1s;
+        }
+
+        button span {
+            word-spacing: 8px;
+            font-size: 18px;
+            color: #FFF;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+
+        .text-card {
+            background: linear-gradient(150deg, rgb(38, 36, 48), rgb(48, 46, 56));
+            padding: 36px 48px;
+            border-radius: 15px;
+            box-shadow: -5px -5px 30px #ffffff15, 5px 5px 30px #080914a1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .button-box {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav {
+            width: 100%;
+            height: 100px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            box-shadow: 0px 0px 10px #000;
+        }
+
+        .show-level {
+            color: #FFF;
+            font-size: 28px;
+            position: absolute;
+            left: 50%;
+            top: 50px;
+            transform: translate(-50%, -50%);
+        }
+
+        .container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+        }
+
+        .content {
+            width: 500px;
+            height: 500px;
+            max-width: 90vw;
+            max-height: 90vw;
+            background-color: #FFF;
+            border-radius: 10px;
+            padding: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .box {
+            width: calc((100% - 10px) / 2);
+            height: calc((100% - 10px) / 2);
+            border-radius: 10px;
+            background-color: aqua;
+            cursor: pointer;
+        }
+
+        .answer {
+            background-color: bisque;
+        }
+
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="homepage">
+        <div class="text-card">
+            <h1>測試你的色感</h1>
+            <hr>
+            <div class="button-box">
+                <button type="button" class="btn start">
+                    <div class="mask"></div>
+                    <span>開&nbsp;始</span>
+                </button>
+                <button type="button" class="btn continue">
+                    <div class="mask"></div>
+                    <span>繼&nbsp;續</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="game-page">
+        <nav>
+            <div class="button-box">
+                <button type="button" class="btn pause">
+                    <div class="mask"></div>
+                    <span>暫&nbsp;停</span>
+                </button>
+                <span class="show-level"></span>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="content">
+            </div>
+        </div>
+    </section>
+
+    <section class="end-page">
+        <div class="text-card">
+            <h1 id="result-title">你贏了</h1>
+            <h2 id="result-content">你輸了</h2>
+            <hr>
+            <div class="button-box">
+                <button type="button" class="btn restart">
+                    <div class="mask"></div>
+                    <span>重&nbsp;新&nbsp;開&nbsp;始</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Js =====================  -->
+    <script>
+        const homePage = document.querySelector('.homepage');
+
+        const gamePage = document.querySelector('.game-page');
+        const showLevel = document.querySelector('.show-level');
+        const gameContent = document.querySelector('div.content');
+        let level = 1;
+        const maxLevel = 20;
+        let levelDifficulty = 1;
+        const difficultyLevel = 6;
+        const maxLevelDifficulty = Math.ceil(maxLevel / difficultyLevel);
+        let boxContent;
+        let ansNumber;
+        let normalBoxs;
+        let ansBox;
+
+        const endPage = document.querySelector('.end-page');
+        const resultTitle = document.querySelector('#result-title');
+        const resultContent = document.querySelector('#result-content');
+
+        const startBtn = document.querySelector('.start');
+        const pauseBtn = document.querySelector('.pause');
+        const continueBtn = document.querySelector('.continue');
+        const restartBtn = document.querySelector('.restart');
+
+        //基本介面設定
+        continueBtn.classList.add('hide');
+        gamePage.classList.add('hide');
+        endPage.classList.add('hide');
+
+        // test();
+        function test() {
+            hideSwitch(homePage, gamePage);
+            hideSwitch(startBtn, pauseBtn);
+            createLevel(); // 開始遊戲了
+        }
+
+        startBtn.addEventListener('click', function () {
+            hideSwitch(homePage, gamePage);
+            hideSwitch(startBtn, pauseBtn);
+            createLevel(); // 開始遊戲了
+        });
+
+        pauseBtn.addEventListener('click', function () {
+            hideSwitch(gamePage, homePage);
+            hideSwitch(pauseBtn, continueBtn);
+        })
+
+        continueBtn.addEventListener('click', function () {
+            hideSwitch(homePage, gamePage);
+            hideSwitch(continueBtn, pauseBtn);
+        });
+
+        restartBtn.addEventListener('click', function () {
+            hideSwitch(endPage, homePage);
+            startBtn.classList.remove('hide');
+            level = 1;
+            levelDifficulty = 1;
+        });
+
+
+        // function ======================= 
+        function createLevel() {
+            //關卡確認 ========================== 
+            showLevel.innerHTML = `
+            LEVEL&nbsp;${level}&nbsp;/&nbsp;${maxLevel}
+            &nbsp;&nbsp;
+            難度&nbsp;${levelDifficulty}
+            `;
+
+            //重置變數 ===================== 
+            boxContent = '';
+            let boxCount = (levelDifficulty + 1) ** 2;
+            gameContent.innerHTML = '';
+            ansNumber = Math.floor(Math.random() * boxCount);
+            // ===========================
+
+            // 創建盒子 ================================ 
+            for (let i = 0; i < boxCount; i++) {
+                if (i !== ansNumber) {
+                    boxContent += `<div class="box"></div>`;
+                } else {
+                    boxContent += `<div class="box answer"></div>`
+                };
+            }
+            gameContent.innerHTML = boxContent;
+            // ============================== 
+
+            //定義盒子 ============================
+            normalBoxs = document.querySelectorAll('div.box');
+            ansBox = document.querySelector('div.answer');
+            // 隨機顏色 ========================== 
+            boxColor();
+            // 盒子大小變化 
+            let boxSize = `calc( (100% - ${levelDifficulty} * 10px) / (${levelDifficulty} + 1) )`
+            normalBoxs.forEach(function (item, index) {
+                item.style.width = boxSize;
+                item.style.height = item.style.width;
+                // 確認答案 ======================= 
+                item.addEventListener('click', function () {
+                    if (item.classList.contains('answer')) {
+                        console.log('正確');
+                        checkAns(1);
+                    } else {
+                        console.log('錯誤');
+                        checkAns(0);
+                    }
+                });
+            });
+            // ============================== 
+        };
+
+        // 答案判斷
+        function checkAns(i) {
+            if (i === 1) {
+                level++;
+                if (level > maxLevel) {
+                    gameResult('win');
+                    return;
+                };
+                // 關卡難度調整
+                if (level % difficultyLevel === 0) {
+                    levelDifficulty++;
+                };
+                createLevel();
+                return;
+            }
+            if (i === 0) {
+                gameResult('lose');
+                return;
+            }
+        }
+        //輸贏判斷
+        function gameResult(i) {
+            hideSwitch(gamePage, endPage);
+            if (i === 'win') {
+                resultTitle.textContent = '恭喜過關!!';
+                resultContent.textContent = `你突破了全部關卡`;
+                return;
+            }
+            if (i === 'lose') {
+                resultTitle.textContent = '挑戰失敗QQ';
+                resultContent.innerHTML = `你離挑戰成功只差了<span style="color:orange;">&nbsp;${maxLevel - level}&nbsp;</span>關`;
+                return;
+            }
+        }
+
+        // 顯示開關
+        function hideSwitch(hide, show) {
+            hide.classList.add('hide');
+            show.classList.remove('hide');
+        }
+        //隨機顏色
+        function colorRandom() {
+            return Math.floor(Math.random() * 200);;
+        }
+
+        // 方塊上色
+        function boxColor() {
+            let colorR = colorRandom();
+            let colorG = colorRandom();
+            let colorB = colorRandom();
+            let ansColor;
+            let colors = [colorR, colorG, colorB];
+            //若其中一個顏色 < 50 ; 改為加重顏色
+            for (let i = 0; i < colors.length; i++) {
+                if (colors[i] < 50) {
+                    ansColor = 0;
+                    break;
+                } else {
+                    ansColor = 1;
+                }
+            }
+
+            normalBoxs.forEach(function (item, index) {
+                item.style.backgroundColor = `rgb(${colorR} , ${colorG} , ${colorB})`;
+            })
+            //答案難度 (最大變化量 - ((當前關卡難度-1) * ( (最大變化量) / 總難度數量 )))
+            const difficultAdjustment = maxLevelDifficulty + 2;
+            let answerDifficulty = 50 - ((levelDifficulty - 1) * 50 / difficultAdjustment).toFixed(0);
+            console.log(' 顏色變化',answerDifficulty);
+            
+            
+
+            switch (ansColor) {
+                case 0:
+                    ansBox.style.backgroundColor = `rgb(${colorR + answerDifficulty} , ${colorG + answerDifficulty} , ${colorB + answerDifficulty})`;
+                    break;
+                default:
+                    ansBox.style.backgroundColor = `rgb(${colorR - answerDifficulty} , ${colorG - answerDifficulty} , ${colorB - answerDifficulty})`;
+                    break;
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
